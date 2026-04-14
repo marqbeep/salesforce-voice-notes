@@ -32,4 +32,7 @@ The exact keys sent in `sendToZapier()` (lines 374–394) must match what the Za
 ## Git & GitHub
 
 - Repo: https://github.com/marqbeep/salesforce-voice-notes (private)
-- Always commit and push after changes with a descriptive message.
+- **After every meaningful change, commit and push.** Do not batch up multiple features into one commit — commit at each logical checkpoint so work is never lost.
+- Use clean, descriptive commit messages that explain *what changed and why*, not just "update index.html".
+- `gh` CLI is at `C:\Program Files\GitHub CLI\gh.exe`. In bash, add it to PATH with `export PATH="$PATH:/c/Program Files/GitHub CLI"` before running `gh` commands.
+- Push with `git push` after every commit.
