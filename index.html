@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SF Voice Notes</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0f; color: #e8e8f0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+  .header { background: #13131a; border-bottom: 1px solid #2a2a3a; padding: 18px 20px 14px; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+  .logo span { color: #00e5a0; }
+  .stage-badge { background: #7b5ea7; color: white; font-size: 10px; padding: 3px 10px; border-radius: 20px; font-family: monospace; }
+  .header-sub { font-size: 12px; color: #6b6b80; font-family: monospace; }
+  .section { padding: 20px 20px 0; }
+  .section-label { font-family: monospace; font-size: 10px; letter-spacing: 1.5px; color: #6b6b80; text-transform: uppercase; margin-bottom: 10px; }
+  .api-key-box { background: #1c1c28; border: 1px solid #ff9f1c; border-radius: 10px; padding: 14px; margin: 0 20px; }
+  .api-key-label { font-size: 12px; color: #ff9f1c; margin-bottom: 8px; font-weight: 600; }
+  .api-key-note { font-size: 11px; color: #6b6b80; margin-top: 8px; line-height: 1.5; }
+  .input-field { width: 100%; background: #13131a; border: 1px solid #2a2a3a; border-radius: 10px; padding: 11px 14px; color: #e8e8f0; font-family: monospace; font-size: 12px; outline: none; transition: border-color 0.2s; }
+  .input-field:focus { border-color: #00e5a0; }
+  .input-field::placeholder { color: #6b6b80; }
+  .record-area { background: #13131a; border: 1px solid #2a2a3a; border-radius: 16px; padding: 24px 20px; margin: 0 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .record-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: #00e5a0; cursor: pointer; font-size: 30px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .record-btn.recording { background: #ff4d6d; animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,77,109,0.4);}70%{box-shadow:0 0 0 20px rgba(255,77,109,0);}100%{box-shadow:0 0 0 0 rgba(255,77,109,0);} }
+  .record-status { font-family: monospace; font-size: 13px; color: #6b6b80; text-align: center; }
+  .transcript-box { width: 100%; background: #1c1c28; border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px; font-size: 13px; color: #aaaacc; line-height: 1.6; font-style: italic; display: none; }
+  .parse-btn { width: 100%; padding: 14px; background: #00e5a0; color: #0a0a0f; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; display: none; }
+  .parse-btn:disabled { background: #2a2a3a; color: #6b6b80; cursor: not-allowed; }
+  .manual-textarea { width: 100%; background: #1c1c28; border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px; color: #e8e8f0; font-family: 'Segoe UI', sans-serif; font-size: 13px; outline: none; resize: vertical; min-height: 80px; line-height: 1.6; }
+  .manual-textarea:focus { border-color: #7b5ea7; }
+  .manual-textarea::placeholder { color: #6b6b80; }
+  .manual-parse-btn { width: 100%; padding: 12px; background: #7b5ea7; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: none; margin-top: 8px; }
+  .clear-btn { width: 100%; padding: 13px; background: transparent; color: #6b6b80; border: 1px solid #2a2a3a; border-radius: 12px; font-size: 14px; cursor: pointer; }
+  .fields-wrap { display: flex; flex-direction: column; gap: 10px; padding: 0 20px; }
+  .field-row { background: #13131a; border: 1px solid #2a2a3a; border-radius: 12px; padding: 12px 14px; transition: border-color 0.2s; }
+  .field-row.filled { border-color: #00e5a0; }
+  .field-row.missing { border-color: #ff4d6d; }
+  .field-row.locked { opacity: 0.5; }
+  .field-row.search-field { border-color: #7b5ea7; background: #1a1525; }
+  .field-row.search-field.filled { border-color: #00e5a0; background: #13131a; }
+  .field-name { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-family: monospace; font-size: 10px; letter-spacing: 1px; color: #6b6b80; text-transform: uppercase; }
+  .req { color: #ff4d6d; font-size: 10px; }
+  .opt { color: #6b6b80; font-size: 10px; }
+  .lck { background: #2a2a3a; color: #6b6b80; font-size: 9px; padding: 2px 6px; border-radius: 4px; }
+  .search-badge { background: #7b5ea7; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; }
+  .fi { width: 100%; background: transparent; border: none; color: #e8e8f0; font-size: 14px; font-family: 'Segoe UI', sans-serif; outline: none; padding: 0; }
+  .fi option { background: #1c1c28; }
+  .fv { font-size: 13px; color: #6b6b80; font-style: italic; }
+  .missing-banner { background: rgba(255,77,109,0.1); border: 1px solid #ff4d6d; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #ff4d6d; line-height: 1.5; display: none; margin-bottom: 12px; }
+  .result-banner { border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 500; text-align: center; display: none; margin-bottom: 12px; }
+  .result-banner.success { background: rgba(0,229,160,0.1); border: 1px solid #00e5a0; color: #00e5a0; display: block; }
+  .result-banner.error { background: rgba(255,77,109,0.1); border: 1px solid #ff4d6d; color: #ff4d6d; display: block; }
+  .send-btn { width: 100%; padding: 18px; background: #00e5a0; color: #0a0a0f; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; }
+  .send-btn:disabled { background: #2a2a3a; color: #6b6b80; cursor: not-allowed; }
+  .search-hint { background: rgba(123,94,167,0.1); border: 1px solid #7b5ea7; border-radius: 10px; padding: 12px 14px; margin: 0 20px 12px; font-size: 12px; color: #b89fd4; line-height: 1.6; }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">SF<span>Voice</span></div>
+    <div class="stage-badge">FOLLOW UP</div>
+  </div>
+  <div class="header-sub">Marquis Figueroa · Salesforce Automation</div>
+</div>
+
+<div class="section"><div class="section-label">Anthropic API Key</div></div>
+<div class="api-key-box">
+  <div class="api-key-label">Required for AI parsing</div>
+  <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." />
+  <div class="api-key-note">Get your key at <strong>console.anthropic.com</strong> → API Keys.</div>
+</div>
+
+<div class="section" style="margin-top:16px;"><div class="section-label">Zapier Webhook URL</div></div>
+<div style="padding:0 20px;">
+  <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." />
+</div>
+
+<div class="section" style="margin-top:20px;"><div class="section-label">Voice Note</div></div>
+<div style="padding:0 20px;">
+  <div class="record-area">
+    <button class="record-btn" id="recordBtn" onclick="toggleRecord()">🎙️</button>
+    <div class="record-status" id="recordStatus">Tap to record your notes</div>
+    <div class="transcript-box" id="transcriptBox"></div>
+    <button class="parse-btn" id="parseBtn" onclick="parseWithAI('voice')">✨ Parse with AI → Fill Fields</button>
+    <div style="width:100%;border-top:1px solid #2a2a3a;padding-top:14px;">
+      <div style="font-family:monospace;font-size:10px;letter-spacing:1px;color:#6b6b80;text-transform:uppercase;margin-bottom:8px;">Or type your notes</div>
+      <textarea class="manual-textarea" id="manualNote" placeholder="Type your notes here instead of recording..." oninput="onManualInput()"></textarea>
+      <button class="manual-parse-btn" id="manualParseBtn" onclick="parseWithAI('manual')">✨ Parse typed note with AI</button>
+    </div>
+    <button class="clear-btn" onclick="clearAll()">🗑 Clear All Fields</button>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;"><div class="section-label">Salesforce Fields</div></div>
+<div class="search-hint">🔍 <strong>Search Fields</strong> — Phone is primary, Address and Name are backups. Zapier uses these to find the exact record before updating.</div>
+
+<div class="fields-wrap">
+
+  <!-- SEARCH FIELDS -->
+  <div class="field-row search-field" id="row-seller_phone">
+    <div class="field-name">Seller Phone <span class="search-badge">🔍 primary search</span></div>
+    <input class="fi" id="seller_phone" placeholder="digits only e.g. 2145158483" oninput="uf('seller_phone')" />
+  </div>
+  <div class="field-row search-field" id="row-property_address">
+    <div class="field-name">Property Address <span class="search-badge">🔍 secondary search</span></div>
+    <input class="fi" id="property_address" placeholder="e.g. 442 W Scotland Dr, Irving, TX 75062" oninput="uf('property_address')" />
+  </div>
+  <div class="field-row search-field" id="row-opportunity_name">
+    <div class="field-name">Opportunity Name <span class="search-badge">🔍 tertiary search</span></div>
+    <input class="fi" id="opportunity_name" placeholder="Seller name or deal name..." oninput="uf('opportunity_name')" />
+  </div>
+
+  <!-- REQUIRED FIELDS -->
+  <div class="field-row" id="row-follow_up_status">
+    <div class="field-name">Follow Up Status <span class="req">* required</span></div>
+    <select class="fi" id="follow_up_status" onchange="uf('follow_up_status')">
+      <option value="">-- Select --</option>
+      <option>Hot</option>
+      <option>Cold</option>
+    </select>
+  </div>
+  <div class="field-row" id="row-am_notes">
+    <div class="field-name">AM Notes <span class="req">* required</span></div>
+    <input class="fi" id="am_notes" placeholder="Notes from conversation..." oninput="uf('am_notes')" />
+  </div>
+  <div class="field-row" id="row-next_step">
+    <div class="field-name">Next Step <span class="req">* required</span></div>
+    <input class="fi" id="next_step" placeholder="What's the next action?" oninput="uf('next_step')" />
+  </div>
+  <div class="field-row" id="row-next_contact_date">
+    <div class="field-name">Next Contact Date <span class="req">* required</span></div>
+    <input class="fi" id="next_contact_date" type="date" onchange="uf('next_contact_date')" />
+  </div>
+  <div class="field-row" id="row-last_conversation_date">
+    <div class="field-name">Last Conversation Date <span class="req">* required</span></div>
+    <input class="fi" id="last_conversation_date" type="date" onchange="uf('last_conversation_date')" />
+  </div>
+  <div class="field-row" id="row-last_offer">
+    <div class="field-name">Last Offer ($) <span class="req">* required</span></div>
+    <input class="fi" id="last_offer" type="number" placeholder="0" oninput="uf('last_offer')" />
+  </div>
+  <div class="field-row" id="row-offer_made_time">
+    <div class="field-name">Offer Made Time <span class="req">* required</span></div>
+    <input class="fi" id="offer_made_time" type="datetime-local" onchange="uf('offer_made_time')" />
+  </div>
+  <div class="field-row" id="row-reason_not_locked">
+    <div class="field-name">Reason Not Locked <span class="req">* required</span></div>
+    <select class="fi" id="reason_not_locked" onchange="uf('reason_not_locked')">
+      <option value="">-- Select --</option>
+      <option value="Not Ready">Not Ready</option>
+      <option value="High Price">High Price</option>
+      <option value="Other People Involved">Other People Involved</option>
+    </select>
+  </div>
+  <div class="field-row" id="row-appointment_set_quality">
+    <div class="field-name">Appointment Set Quality <span class="req">* required</span></div>
+    <select class="fi" id="appointment_set_quality" onchange="uf('appointment_set_quality')">
+      <option value="">-- Select --</option>
+      <option>Good</option>
+      <option>Bad</option>
+    </select>
+  </div>
+  <div class="field-row" id="row-appointment_attendance">
+    <div class="field-name">Appointment Attendance <span class="req">* required</span></div>
+    <select class="fi" id="appointment_attendance" onchange="uf('appointment_attendance')">
+      <option value="">-- Select --</option>
+      <option>Everyone Showed Up</option>
+      <option>AM Rescheduled</option>
+      <option value="Seller didn't Show Up">Seller didn't Show Up</option>
+    </select>
+  </div>
+  <div class="field-row" id="row-in_person_appointment_completed">
+    <div class="field-name">In Person Appt Completed <span class="req">* required</span></div>
+    <select class="fi" id="in_person_appointment_completed" onchange="uf('in_person_appointment_completed')">
+      <option value="">-- Select --</option>
+      <option>Yes</option>
+      <option>No</option>
+    </select>
+  </div>
+
+  <!-- AUTO / LOCKED -->
+  <div class="field-row filled locked">
+    <div class="field-name">Survey Call Setup <span class="lck">auto</span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+      <input type="checkbox" id="survey_call_setup" checked style="width:18px;height:18px;accent-color:#00e5a0;" />
+      <span style="font-size:13px;color:#6b6b80;">Checked = Yes</span>
+    </div>
+  </div>
+  <div class="field-row locked"><div class="field-name">Stage <span class="lck">locked</span></div><div class="fv">Follow Up</div></div>
+  <div class="field-row locked"><div class="field-name">AM to Make Last Offer <span class="lck">locked</span></div><div class="fv">Marquis Figueroa</div></div>
+  <div class="field-row locked"><div class="field-name">Survey Call Assigned To <span class="lck">locked</span></div><div class="fv">Marcus Daniel</div></div>
+  <div class="field-row locked"><div class="field-name">Google Drive Link <span class="lck">locked</span></div><div class="fv">placeholder</div></div>
+
+</div>
+
+<div style="padding:20px;">
+  <div class="missing-banner" id="missingBanner"></div>
+  <div class="result-banner" id="resultBanner"></div>
+  <button class="send-btn" id="sendBtn" onclick="sendToZapier()" disabled>Send to Salesforce →</button>
+</div>
+
+<script>
+const REQ=['opportunity_name','property_address','am_notes','next_step','next_contact_date','last_conversation_date','last_offer','offer_made_time','reason_not_locked','follow_up_status','appointment_set_quality','appointment_attendance','in_person_appointment_completed'];
+const LBL={seller_phone:'Seller Phone',property_address:'Property Address',opportunity_name:'Opportunity Name',am_notes:'AM Notes',next_step:'Next Step',next_contact_date:'Next Contact Date',last_conversation_date:'Last Conversation Date',last_offer:'Last Offer',offer_made_time:'Offer Made Time',reason_not_locked:'Reason Not Locked',follow_up_status:'Follow Up Status',appointment_set_quality:'Appt Quality',appointment_attendance:'Appt Attendance',in_person_appointment_completed:'In Person Completed'};
+
+let isRec=false, recog=null, tfinal='';
+
+function uf(k){
+  const el=document.getElementById(k), row=document.getElementById('row-'+k);
+  if(!el||!row) return;
+  const ok = el.value.trim()!=='';
+  row.classList.toggle('filled', ok);
+  row.classList.toggle('missing', !ok && REQ.includes(k));
+  checkSend();
+}
+
+function checkSend(){
+  const miss = REQ.filter(k=>{ const el=document.getElementById(k); return el && el.value.trim()===''; });
+  const bn=document.getElementById('missingBanner'), btn=document.getElementById('sendBtn');
+  if(miss.length){ bn.style.display='block'; bn.textContent='⚠️ Missing: '+miss.map(k=>LBL[k]).join(', '); btn.disabled=true; }
+  else { bn.style.display='none'; btn.disabled=false; }
+}
+
+function onManualInput(){
+  const val = document.getElementById('manualNote').value.trim();
+  document.getElementById('manualParseBtn').style.display = val ? 'block' : 'none';
+}
+
+function toggleRecord(){
+  if(isRec) stopRec(); else startRec();
+}
+
+function startRec(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ setS('Speech recognition not supported — use Chrome','#ff4d6d'); return; }
+  tfinal = '';
+  document.getElementById('transcriptBox').style.display = 'none';
+  document.getElementById('transcriptBox').textContent = '';
+  document.getElementById('parseBtn').style.display = 'none';
+  recog = new SR();
+  recog.continuous = true;
+  recog.interimResults = true;
+  recog.lang = 'en-US';
+  recog.onresult = e => {
+    let f='', i='';
+    for(let x=e.resultIndex; x<e.results.length; x++){
+      if(e.results[x].isFinal) f += e.results[x][0].transcript;
+      else i += e.results[x][0].transcript;
+    }
+    tfinal += f;
+    const b = document.getElementById('transcriptBox');
+    b.textContent = tfinal + i;
+    b.style.display = 'block';
+  };
+  recog.onerror = e => { stopRec(); setS('Mic error: '+e.error,'#ff4d6d'); };
+  recog.onend = () => { if(isRec){ recog.start(); } };
+  recog.start();
+  isRec = true;
+  document.getElementById('recordBtn').classList.add('recording');
+  document.getElementById('recordBtn').textContent = '⏹️';
+  setS('Recording... tap to stop','#ff4d6d');
+}
+
+function stopRec(){
+  if(recog){ recog.onend = null; recog.stop(); }
+  isRec = false;
+  document.getElementById('recordBtn').classList.remove('recording');
+  document.getElementById('recordBtn').textContent = '🎙️';
+  if(tfinal.trim()){
+    setS('Ready to parse ✓','#00e5a0');
+    document.getElementById('parseBtn').style.display = 'block';
+  } else {
+    setS('Tap to record your notes','#6b6b80');
+  }
+}
+
+function setS(msg, color){
+  const el = document.getElementById('recordStatus');
+  el.textContent = msg;
+  el.style.color = color || '#6b6b80';
+}
+
+async function parseWithAI(source){
+  const key = document.getElementById('apiKey').value.trim();
+  if(!key){ alert('Enter your Anthropic API key first.'); return; }
+  const text = source==='manual' ? document.getElementById('manualNote').value.trim() : tfinal.trim();
+  if(!text) return;
+
+  const pb = source==='manual' ? document.getElementById('manualParseBtn') : document.getElementById('parseBtn');
+  pb.textContent = '⏳ Parsing...';
+  pb.disabled = true;
+  setS('AI is reading your notes...','#ff9f1c');
+
+  const today = new Date().toISOString().split('T')[0];
+  const prompt = `Extract info from this real estate wholesaling sales note. Return ONLY a valid JSON object, no explanation, no markdown.
+
+Keys:
+- seller_phone: seller phone number digits only no dashes or spaces (e.g. 2145158483), empty string if not mentioned
+- property_address: full property address in format "Street, City, ST, Zip" — always use 2-letter state abbreviation (GA not Georgia, TX not Texas, FL not Florida)
+- opportunity_name: seller name or deal name
+- am_notes: detailed summary of the conversation including seller situation, motivation, property condition
+- next_step: next action to take
+- next_contact_date: follow-up date (YYYY-MM-DD, today is ${today})
+- last_conversation_date: date of this conversation (YYYY-MM-DD, default today)
+- last_offer: dollar amount as number only, 0 if unknown
+- offer_made_time: when offer was made (YYYY-MM-DDTHH:MM), use today noon if not specified
+- reason_not_locked: must be exactly one of: Not Ready, High Price, Other People Involved (infer from context)
+- follow_up_status: must be exactly one of: Hot, Cold (Hot = urgent/motivated, Cold = not ready/hesitant)
+- appointment_set_quality: must be exactly one of: Good, Bad
+- appointment_attendance: must be exactly one of: Everyone Showed Up, AM Rescheduled, Seller didn't Show Up
+- in_person_appointment_completed: must be exactly one of: Yes, No
+
+Use empty string "" for unknown text fields.
+
+Note: "${text}"`;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const raw = data.content.map(i=>i.text||'').join('');
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    ['seller_phone','property_address','opportunity_name','am_notes','next_step',
+     'next_contact_date','last_conversation_date','offer_made_time'].forEach(k=>{
+      const el = document.getElementById(k);
+      if(el && parsed[k]) { el.value = parsed[k]; uf(k); }
+    });
+    ['follow_up_status','appointment_set_quality','appointment_attendance',
+     'in_person_appointment_completed','reason_not_locked'].forEach(k=>{
+      const el = document.getElementById(k);
+      if(el && parsed[k]) { el.value = parsed[k]; uf(k); }
+    });
+    const lo = document.getElementById('last_offer');
+    if(lo && parsed.last_offer !== undefined) { lo.value = parsed.last_offer; uf('last_offer'); }
+
+    setS('✅ Fields filled from your note!','#00e5a0');
+    pb.textContent = '✨ Re-parse';
+  } catch(err){
+    setS('❌ Parse failed: '+err.message,'#ff4d6d');
+    pb.textContent = source==='manual' ? '✨ Parse typed note with AI' : '✨ Parse with AI → Fill Fields';
+  }
+  pb.disabled = false;
+  checkSend();
+}
+
+async function sendToZapier(){
+  const url = document.getElementById('webhookUrl').value.trim();
+  if(!url){ alert('Enter your Zapier webhook URL.'); return; }
+  const btn = document.getElementById('sendBtn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  const p = {
+    seller_phone: document.getElementById('seller_phone').value.trim(),
+    property_address: document.getElementById('property_address').value.trim(),
+    opportunity_name: document.getElementById('opportunity_name').value.trim(),
+    am_notes: document.getElementById('am_notes').value.trim(),
+    next_step: document.getElementById('next_step').value.trim(),
+    next_contact_date: document.getElementById('next_contact_date').value,
+    stage: 'Follow Up',
+    follow_up_status: document.getElementById('follow_up_status').value,
+    last_conversation_date: document.getElementById('last_conversation_date').value,
+    am_to_make_last_offer: 'Marquis Figueroa',
+    last_offer: parseFloat(document.getElementById('last_offer').value) || 0,
+    offer_made_time: document.getElementById('offer_made_time').value,
+    reason_not_locked: document.getElementById('reason_not_locked').value,
+    google_drive_link: 'placeholder',
+    appointment_set_quality: document.getElementById('appointment_set_quality').value,
+    appointment_attendance: document.getElementById('appointment_attendance').value,
+    in_person_appointment_completed: document.getElementById('in_person_appointment_completed').value,
+    survey_call_setup: document.getElementById('survey_call_setup').checked ? 'Yes' : 'No',
+    survey_call_assigned_to: 'Marcus Daniel'
+  };
+
+  const rb = document.getElementById('resultBanner');
+  try{
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p),
+      mode: 'no-cors'
+    });
+    rb.textContent = '✅ Sent to Salesforce! Check your Zapier history to confirm it landed.';
+    rb.className = 'result-banner success';
+    btn.textContent = '✅ Sent!';
+    setTimeout(()=>{ btn.textContent='Send to Salesforce →'; checkSend(); }, 3000);
+  } catch(e){
+    rb.textContent = '❌ Failed to send. Check your webhook URL.';
+    rb.className = 'result-banner error';
+    btn.textContent = 'Send to Salesforce →';
+    btn.disabled = false;
+  }
+}
+
+function clearAll(){
+  const allFields = [...REQ, 'seller_phone'];
+  allFields.forEach(k=>{
+    const el = document.getElementById(k);
+    if(el) el.value = '';
+    const r = document.getElementById('row-'+k);
+    if(r) r.classList.remove('filled','missing');
+  });
+  document.getElementById('survey_call_setup').checked = true;
+  document.getElementById('transcriptBox').style.display = 'none';
+  document.getElementById('transcriptBox').textContent = '';
+  document.getElementById('parseBtn').style.display = 'none';
+  document.getElementById('manualNote').value = '';
+  document.getElementById('manualParseBtn').style.display = 'none';
+  document.getElementById('resultBanner').className = 'result-banner';
+  document.getElementById('missingBanner').style.display = 'none';
+  setS('Tap to record your notes','#6b6b80');
+  tfinal = '';
+  checkSend();
+}
+
+checkSend();
+</script>
+</body>
+</html>
