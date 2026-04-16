@@ -429,10 +429,15 @@ async function sendToZapier(){
       body: JSON.stringify(p),
       mode: 'no-cors'
     });
-    rb.textContent = '✅ Sent to Salesforce! Check your Zapier history to confirm it landed.';
+    rb.textContent = '✅ Sent! Clearing in 4 seconds...';
     rb.className = 'result-banner success';
     btn.textContent = '✅ Sent!';
-    setTimeout(()=>{ btn.textContent='Send to Salesforce →'; checkSend(); }, 3000);
+    setTimeout(() => {
+      clearAll();
+      rb.textContent = '';
+      rb.className = 'result-banner';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 4000);
   } catch(e){
     rb.textContent = '❌ Failed to send. Check your webhook URL.';
     rb.className = 'result-banner error';
