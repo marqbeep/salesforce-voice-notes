@@ -386,7 +386,7 @@ Note: "${text}"`;
     pb.textContent = '✨ Re-parse';
   } catch(err){
     setS('❌ Parse failed: '+err.message,'#ff4d6d');
-    pb.textContent = source==='manual' ? '✨ Parse typed note with AI' : '✨ Parse with AI → Fill Fields';
+    pb.textContent = source==='manual' ? '✨ Parse typed note with AI' : '🔄 Re-parse';
   }
   pb.disabled = false;
   checkSend();
@@ -434,6 +434,7 @@ async function sendToZapier(){
     btn.textContent = '✅ Sent!';
     setTimeout(() => {
       clearAll();
+      btn.textContent = 'Send to Salesforce →';
       rb.textContent = '';
       rb.className = 'result-banner';
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -486,7 +487,9 @@ function saveHook() {
 }
 
 function todayDate() {
-  return new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 function nowDatetime() {
   const d = new Date();
