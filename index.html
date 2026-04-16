@@ -186,17 +186,23 @@
   </div>
 
   <!-- AUTO / LOCKED -->
-  <div class="field-row filled locked">
-    <div class="field-name">Survey Call Setup <span class="lck">auto</span></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-      <input type="checkbox" id="survey_call_setup" checked style="width:18px;height:18px;accent-color:#00e5a0;" />
-      <span style="font-size:13px;color:#6b6b80;">Checked = Yes</span>
-    </div>
+  <div id="locked-toggle" onclick="toggleLocked()" style="cursor:pointer;background:#13131a;border:1px solid #2a2a3a;border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-family:monospace;font-size:10px;letter-spacing:1px;color:#6b6b80;text-transform:uppercase;">Auto / Locked Fields</span>
+    <span id="locked-chevron" style="color:#6b6b80;font-size:12px;">▼ show</span>
   </div>
-  <div class="field-row locked"><div class="field-name">Stage <span class="lck">locked</span></div><div class="fv">Follow Up</div></div>
-  <div class="field-row locked"><div class="field-name">AM to Make Last Offer <span class="lck">locked</span></div><div class="fv">Marquis Figueroa</div></div>
-  <div class="field-row locked"><div class="field-name">Survey Call Assigned To <span class="lck">locked</span></div><div class="fv">Marcus Daniel</div></div>
-  <div class="field-row locked"><div class="field-name">Google Drive Link <span class="lck">locked</span></div><div class="fv">placeholder</div></div>
+  <div id="locked-fields" style="display:none;flex-direction:column;gap:10px;">
+    <div class="field-row filled locked">
+      <div class="field-name">Survey Call Setup <span class="lck">auto</span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+        <input type="checkbox" id="survey_call_setup" checked style="width:18px;height:18px;accent-color:#00e5a0;" />
+        <span style="font-size:13px;color:#6b6b80;">Checked = Yes</span>
+      </div>
+    </div>
+    <div class="field-row locked"><div class="field-name">Stage <span class="lck">locked</span></div><div class="fv">Follow Up</div></div>
+    <div class="field-row locked"><div class="field-name">AM to Make Last Offer <span class="lck">locked</span></div><div class="fv">Marquis Figueroa</div></div>
+    <div class="field-row locked"><div class="field-name">Survey Call Assigned To <span class="lck">locked</span></div><div class="fv">Marcus Daniel</div></div>
+    <div class="field-row locked"><div class="field-name">Google Drive Link <span class="lck">locked</span></div><div class="fv">placeholder</div></div>
+  </div>
 
 </div>
 
@@ -223,6 +229,14 @@ function uf(k){
   row.classList.toggle('filled', ok);
   row.classList.toggle('missing', !ok && REQ.includes(k));
   checkSend();
+}
+
+function toggleLocked() {
+  const panel = document.getElementById('locked-fields');
+  const chevron = document.getElementById('locked-chevron');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'flex';
+  chevron.textContent = visible ? '▼ show' : '▲ hide';
 }
 
 function checkSend(){
