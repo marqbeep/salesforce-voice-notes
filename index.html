@@ -436,11 +436,19 @@ function clearAll(){
 
 function saveKey() {
   const v = document.getElementById('apiKey').value.trim();
-  if (v) localStorage.setItem('sf_api_key', v);
+  if (v) {
+    localStorage.setItem('sf_api_key', v);
+  } else {
+    localStorage.removeItem('sf_api_key');
+  }
 }
 function saveHook() {
   const v = document.getElementById('webhookUrl').value.trim();
-  if (v) localStorage.setItem('sf_webhook_url', v);
+  if (v) {
+    localStorage.setItem('sf_webhook_url', v);
+  } else {
+    localStorage.removeItem('sf_webhook_url');
+  }
 }
 
 // Init: load persisted credentials
