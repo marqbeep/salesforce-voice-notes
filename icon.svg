@@ -3,5 +3,5 @@
   <circle cx="96" cy="80" r="28" fill="#00e5a0"/>
   <rect x="80" y="108" width="32" height="8" rx="4" fill="#00e5a0"/>
   <rect x="88" y="116" width="16" height="20" rx="2" fill="#00e5a0"/>
-  <text x="96" y="168" font-family="monospace" font-size="18" fill="#00e5a0" text-anchor="middle" font-weight="bold">SF</text>
+  <text x="96" y="158" font-family="monospace" font-size="18" fill="#00e5a0" text-anchor="middle" font-weight="bold">SF</text>
 </svg>

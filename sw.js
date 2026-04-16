@@ -26,6 +26,8 @@ self.addEventListener('fetch', e => {
     return; // let network handle it
   }
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => {
+      return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+    }))
   );
 });
