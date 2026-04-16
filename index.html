@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#00e5a0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SFVoice">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <title>SF Voice Notes</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -73,13 +79,13 @@
 <div class="section"><div class="section-label">Anthropic API Key</div></div>
 <div class="api-key-box">
   <div class="api-key-label">Required for AI parsing</div>
-  <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." />
+  <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." oninput="saveKey()" />
   <div class="api-key-note">Get your key at <strong>console.anthropic.com</strong> → API Keys.</div>
 </div>
 
 <div class="section" style="margin-top:16px;"><div class="section-label">Zapier Webhook URL</div></div>
 <div style="padding:0 20px;">
-  <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." />
+  <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." oninput="saveHook()" />
 </div>
 
 <div class="section" style="margin-top:20px;"><div class="section-label">Voice Note</div></div>
@@ -88,7 +94,7 @@
     <button class="record-btn" id="recordBtn" onclick="toggleRecord()">🎙️</button>
     <div class="record-status" id="recordStatus">Tap to record your notes</div>
     <div class="transcript-box" id="transcriptBox"></div>
-    <button class="parse-btn" id="parseBtn" onclick="parseWithAI('voice')">✨ Parse with AI → Fill Fields</button>
+    <button class="parse-btn" id="parseBtn" onclick="parseWithAI('voice')">🔄 Re-parse</button>
     <div style="width:100%;border-top:1px solid #2a2a3a;padding-top:14px;">
       <div style="font-family:monospace;font-size:10px;letter-spacing:1px;color:#6b6b80;text-transform:uppercase;margin-bottom:8px;">Or type your notes</div>
       <textarea class="manual-textarea" id="manualNote" placeholder="Type your notes here instead of recording..." oninput="onManualInput()"></textarea>
@@ -106,7 +112,7 @@
   <!-- SEARCH FIELDS -->
   <div class="field-row search-field" id="row-seller_phone">
     <div class="field-name">Seller Phone <span class="search-badge">🔍 primary search</span></div>
-    <input class="fi" id="seller_phone" placeholder="digits only e.g. 2145158483" oninput="uf('seller_phone')" />
+    <input class="fi" id="seller_phone" placeholder="e.g. (214) 515-8483 or 2145158483" oninput="this.value=normalizePhone(this.value);uf('seller_phone')" />
   </div>
   <div class="field-row search-field" id="row-property_address">
     <div class="field-name">Property Address <span class="search-badge">🔍 secondary search</span></div>
@@ -186,17 +192,23 @@
   </div>
 
   <!-- AUTO / LOCKED -->
-  <div class="field-row filled locked">
-    <div class="field-name">Survey Call Setup <span class="lck">auto</span></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-      <input type="checkbox" id="survey_call_setup" checked style="width:18px;height:18px;accent-color:#00e5a0;" />
-      <span style="font-size:13px;color:#6b6b80;">Checked = Yes</span>
-    </div>
+  <div id="locked-toggle" onclick="toggleLocked()" style="cursor:pointer;background:#13131a;border:1px solid #2a2a3a;border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-family:monospace;font-size:10px;letter-spacing:1px;color:#6b6b80;text-transform:uppercase;">Auto / Locked Fields</span>
+    <span id="locked-chevron" style="color:#6b6b80;font-size:12px;">▼ show</span>
   </div>
-  <div class="field-row locked"><div class="field-name">Stage <span class="lck">locked</span></div><div class="fv">Follow Up</div></div>
-  <div class="field-row locked"><div class="field-name">AM to Make Last Offer <span class="lck">locked</span></div><div class="fv">Marquis Figueroa</div></div>
-  <div class="field-row locked"><div class="field-name">Survey Call Assigned To <span class="lck">locked</span></div><div class="fv">Marcus Daniel</div></div>
-  <div class="field-row locked"><div class="field-name">Google Drive Link <span class="lck">locked</span></div><div class="fv">placeholder</div></div>
+  <div id="locked-fields" style="display:none;flex-direction:column;gap:10px;">
+    <div class="field-row filled locked">
+      <div class="field-name">Survey Call Setup <span class="lck">auto</span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+        <input type="checkbox" id="survey_call_setup" checked style="width:18px;height:18px;accent-color:#00e5a0;" />
+        <span style="font-size:13px;color:#6b6b80;">Checked = Yes</span>
+      </div>
+    </div>
+    <div class="field-row locked"><div class="field-name">Stage <span class="lck">locked</span></div><div class="fv">Follow Up</div></div>
+    <div class="field-row locked"><div class="field-name">AM to Make Last Offer <span class="lck">locked</span></div><div class="fv">Marquis Figueroa</div></div>
+    <div class="field-row locked"><div class="field-name">Survey Call Assigned To <span class="lck">locked</span></div><div class="fv">Marcus Daniel</div></div>
+    <div class="field-row locked"><div class="field-name">Google Drive Link <span class="lck">locked</span></div><div class="fv">placeholder</div></div>
+  </div>
 
 </div>
 
@@ -212,6 +224,10 @@ const LBL={seller_phone:'Seller Phone',property_address:'Property Address',oppor
 
 let isRec=false, recog=null, tfinal='';
 
+function normalizePhone(v) {
+  return v.replace(/\D/g, ''); // strip everything except digits
+}
+
 function uf(k){
   const el=document.getElementById(k), row=document.getElementById('row-'+k);
   if(!el||!row) return;
@@ -219,6 +235,14 @@ function uf(k){
   row.classList.toggle('filled', ok);
   row.classList.toggle('missing', !ok && REQ.includes(k));
   checkSend();
+}
+
+function toggleLocked() {
+  const panel = document.getElementById('locked-fields');
+  const chevron = document.getElementById('locked-chevron');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'flex';
+  chevron.textContent = visible ? '▼ show' : '▲ hide';
 }
 
 function checkSend(){
@@ -274,8 +298,9 @@ function stopRec(){
   document.getElementById('recordBtn').classList.remove('recording');
   document.getElementById('recordBtn').textContent = '🎙️';
   if(tfinal.trim()){
-    setS('Ready to parse ✓','#00e5a0');
-    document.getElementById('parseBtn').style.display = 'block';
+    setS('Parsing your note...','#ff9f1c');
+    // Auto-parse immediately — skip manual button tap
+    parseWithAI('voice');
   } else {
     setS('Tap to record your notes','#6b6b80');
   }
@@ -331,7 +356,7 @@ Note: "${text}"`;
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-6',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -344,7 +369,10 @@ Note: "${text}"`;
     ['seller_phone','property_address','opportunity_name','am_notes','next_step',
      'next_contact_date','last_conversation_date','offer_made_time'].forEach(k=>{
       const el = document.getElementById(k);
-      if(el && parsed[k]) { el.value = parsed[k]; uf(k); }
+      if(el && parsed[k]) {
+        el.value = k === 'seller_phone' ? normalizePhone(parsed[k]) : parsed[k];
+        uf(k);
+      }
     });
     ['follow_up_status','appointment_set_quality','appointment_attendance',
      'in_person_appointment_completed','reason_not_locked'].forEach(k=>{
@@ -358,7 +386,7 @@ Note: "${text}"`;
     pb.textContent = '✨ Re-parse';
   } catch(err){
     setS('❌ Parse failed: '+err.message,'#ff4d6d');
-    pb.textContent = source==='manual' ? '✨ Parse typed note with AI' : '✨ Parse with AI → Fill Fields';
+    pb.textContent = source==='manual' ? '✨ Parse typed note with AI' : '🔄 Re-parse';
   }
   pb.disabled = false;
   checkSend();
@@ -401,10 +429,16 @@ async function sendToZapier(){
       body: JSON.stringify(p),
       mode: 'no-cors'
     });
-    rb.textContent = '✅ Sent to Salesforce! Check your Zapier history to confirm it landed.';
+    rb.textContent = '✅ Sent! Clearing in 4 seconds...';
     rb.className = 'result-banner success';
     btn.textContent = '✅ Sent!';
-    setTimeout(()=>{ btn.textContent='Send to Salesforce →'; checkSend(); }, 3000);
+    setTimeout(() => {
+      clearAll();
+      btn.textContent = 'Send to Salesforce →';
+      rb.textContent = '';
+      rb.className = 'result-banner';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 4000);
   } catch(e){
     rb.textContent = '❌ Failed to send. Check your webhook URL.';
     rb.className = 'result-banner error';
@@ -431,10 +465,62 @@ function clearAll(){
   document.getElementById('missingBanner').style.display = 'none';
   setS('Tap to record your notes','#6b6b80');
   tfinal = '';
+  setDateDefaults();
   checkSend();
 }
 
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (v) {
+    localStorage.setItem('sf_api_key', v);
+  } else {
+    localStorage.removeItem('sf_api_key');
+  }
+}
+function saveHook() {
+  const v = document.getElementById('webhookUrl').value.trim();
+  if (v) {
+    localStorage.setItem('sf_webhook_url', v);
+  } else {
+    localStorage.removeItem('sf_webhook_url');
+  }
+}
+
+function todayDate() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function nowDatetime() {
+  const d = new Date();
+  // YYYY-MM-DDTHH:MM (local time, no seconds)
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function setDateDefaults() {
+  const lcd = document.getElementById('last_conversation_date');
+  const omt = document.getElementById('offer_made_time');
+  if (lcd && !lcd.value) { lcd.value = todayDate(); uf('last_conversation_date'); }
+  if (omt && !omt.value) { omt.value = nowDatetime(); uf('offer_made_time'); }
+}
+
+// Init: load persisted credentials
+(function loadCreds() {
+  const key = localStorage.getItem('sf_api_key');
+  const hook = localStorage.getItem('sf_webhook_url');
+  if (key) document.getElementById('apiKey').value = key;
+  if (hook) document.getElementById('webhookUrl').value = hook;
+})();
+setDateDefaults();
 checkSend();
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
