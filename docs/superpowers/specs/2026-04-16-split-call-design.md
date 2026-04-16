@@ -1,7 +1,7 @@
 # Split-Call AI Architecture Design
 
 **Date:** 2026-04-16
-**Status:** Approved
+**Status:** Deferred — not worth the complexity at current volume. Single Sonnet call handles all fields. Revisit if volume grows significantly.
 
 ---
 
