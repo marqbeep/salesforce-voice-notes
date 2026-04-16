@@ -432,6 +432,7 @@ function clearAll(){
   document.getElementById('missingBanner').style.display = 'none';
   setS('Tap to record your notes','#6b6b80');
   tfinal = '';
+  setDateDefaults();
   checkSend();
 }
 
@@ -452,6 +453,23 @@ function saveHook() {
   }
 }
 
+function todayDate() {
+  return new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+}
+function nowDatetime() {
+  const d = new Date();
+  // YYYY-MM-DDTHH:MM (local time, no seconds)
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function setDateDefaults() {
+  const lcd = document.getElementById('last_conversation_date');
+  const omt = document.getElementById('offer_made_time');
+  if (lcd && !lcd.value) { lcd.value = todayDate(); uf('last_conversation_date'); }
+  if (omt && !omt.value) { omt.value = nowDatetime(); uf('offer_made_time'); }
+}
+
 // Init: load persisted credentials
 (function loadCreds() {
   const key = localStorage.getItem('sf_api_key');
@@ -459,6 +477,7 @@ function saveHook() {
   if (key) document.getElementById('apiKey').value = key;
   if (hook) document.getElementById('webhookUrl').value = hook;
 })();
+setDateDefaults();
 checkSend();
 </script>
 </body>
