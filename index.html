@@ -88,7 +88,7 @@
     <button class="record-btn" id="recordBtn" onclick="toggleRecord()">🎙️</button>
     <div class="record-status" id="recordStatus">Tap to record your notes</div>
     <div class="transcript-box" id="transcriptBox"></div>
-    <button class="parse-btn" id="parseBtn" onclick="parseWithAI('voice')">✨ Parse with AI → Fill Fields</button>
+    <button class="parse-btn" id="parseBtn" onclick="parseWithAI('voice')">🔄 Re-parse</button>
     <div style="width:100%;border-top:1px solid #2a2a3a;padding-top:14px;">
       <div style="font-family:monospace;font-size:10px;letter-spacing:1px;color:#6b6b80;text-transform:uppercase;margin-bottom:8px;">Or type your notes</div>
       <textarea class="manual-textarea" id="manualNote" placeholder="Type your notes here instead of recording..." oninput="onManualInput()"></textarea>
@@ -274,8 +274,9 @@ function stopRec(){
   document.getElementById('recordBtn').classList.remove('recording');
   document.getElementById('recordBtn').textContent = '🎙️';
   if(tfinal.trim()){
-    setS('Ready to parse ✓','#00e5a0');
-    document.getElementById('parseBtn').style.display = 'block';
+    setS('Parsing your note...','#ff9f1c');
+    // Auto-parse immediately — skip manual button tap
+    parseWithAI('voice');
   } else {
     setS('Tap to record your notes','#6b6b80');
   }
