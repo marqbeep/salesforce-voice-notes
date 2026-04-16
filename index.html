@@ -106,7 +106,7 @@
   <!-- SEARCH FIELDS -->
   <div class="field-row search-field" id="row-seller_phone">
     <div class="field-name">Seller Phone <span class="search-badge">🔍 primary search</span></div>
-    <input class="fi" id="seller_phone" placeholder="digits only e.g. 2145158483" oninput="uf('seller_phone')" />
+    <input class="fi" id="seller_phone" placeholder="e.g. (214) 515-8483 or 2145158483" oninput="this.value=normalizePhone(this.value);uf('seller_phone')" />
   </div>
   <div class="field-row search-field" id="row-property_address">
     <div class="field-name">Property Address <span class="search-badge">🔍 secondary search</span></div>
@@ -211,6 +211,10 @@ const REQ=['opportunity_name','property_address','am_notes','next_step','next_co
 const LBL={seller_phone:'Seller Phone',property_address:'Property Address',opportunity_name:'Opportunity Name',am_notes:'AM Notes',next_step:'Next Step',next_contact_date:'Next Contact Date',last_conversation_date:'Last Conversation Date',last_offer:'Last Offer',offer_made_time:'Offer Made Time',reason_not_locked:'Reason Not Locked',follow_up_status:'Follow Up Status',appointment_set_quality:'Appt Quality',appointment_attendance:'Appt Attendance',in_person_appointment_completed:'In Person Completed'};
 
 let isRec=false, recog=null, tfinal='';
+
+function normalizePhone(v) {
+  return v.replace(/\D/g, ''); // strip everything except digits
+}
 
 function uf(k){
   const el=document.getElementById(k), row=document.getElementById('row-'+k);
@@ -345,7 +349,10 @@ Note: "${text}"`;
     ['seller_phone','property_address','opportunity_name','am_notes','next_step',
      'next_contact_date','last_conversation_date','offer_made_time'].forEach(k=>{
       const el = document.getElementById(k);
-      if(el && parsed[k]) { el.value = parsed[k]; uf(k); }
+      if(el && parsed[k]) {
+        el.value = k === 'seller_phone' ? normalizePhone(parsed[k]) : parsed[k];
+        uf(k);
+      }
     });
     ['follow_up_status','appointment_set_quality','appointment_attendance',
      'in_person_appointment_completed','reason_not_locked'].forEach(k=>{
