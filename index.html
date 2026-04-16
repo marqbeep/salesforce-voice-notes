@@ -73,13 +73,13 @@
 <div class="section"><div class="section-label">Anthropic API Key</div></div>
 <div class="api-key-box">
   <div class="api-key-label">Required for AI parsing</div>
-  <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." />
+  <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." oninput="saveKey()" />
   <div class="api-key-note">Get your key at <strong>console.anthropic.com</strong> → API Keys.</div>
 </div>
 
 <div class="section" style="margin-top:16px;"><div class="section-label">Zapier Webhook URL</div></div>
 <div style="padding:0 20px;">
-  <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." />
+  <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." oninput="saveHook()" />
 </div>
 
 <div class="section" style="margin-top:20px;"><div class="section-label">Voice Note</div></div>
@@ -434,6 +434,22 @@ function clearAll(){
   checkSend();
 }
 
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (v) localStorage.setItem('sf_api_key', v);
+}
+function saveHook() {
+  const v = document.getElementById('webhookUrl').value.trim();
+  if (v) localStorage.setItem('sf_webhook_url', v);
+}
+
+// Init: load persisted credentials
+(function loadCreds() {
+  const key = localStorage.getItem('sf_api_key');
+  const hook = localStorage.getItem('sf_webhook_url');
+  if (key) document.getElementById('apiKey').value = key;
+  if (hook) document.getElementById('webhookUrl').value = hook;
+})();
 checkSend();
 </script>
 </body>
