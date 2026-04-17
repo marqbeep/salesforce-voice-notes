@@ -105,22 +105,22 @@
 </div>
 
 <div class="section" style="margin-top:20px;"><div class="section-label">Salesforce Fields</div></div>
-<div class="search-hint">🔍 <strong>Search Fields</strong> — Phone is primary, Address and Name are backups. Zapier uses these to find the exact record before updating.</div>
+<div class="search-hint">🔍 <strong>Lookup Fields</strong> — Address is the primary anchor, Opportunity Name is the confirmation. Zapier uses these to find the exact Salesforce record before updating.</div>
 
 <div class="fields-wrap">
 
-  <!-- SEARCH FIELDS -->
-  <div class="field-row search-field" id="row-seller_phone">
-    <div class="field-name">Seller Phone <span class="search-badge">🔍 primary search</span></div>
-    <input class="fi" id="seller_phone" placeholder="e.g. (214) 515-8483 or 2145158483" oninput="this.value=normalizePhone(this.value);uf('seller_phone')" />
-  </div>
+  <!-- LOOKUP FIELDS: address is primary anchor, opportunity name is confirmation -->
   <div class="field-row search-field" id="row-property_address">
-    <div class="field-name">Property Address <span class="search-badge">🔍 secondary search</span></div>
+    <div class="field-name">Property Address <span class="search-badge">🔍 primary lookup</span></div>
     <input class="fi" id="property_address" placeholder="e.g. 442 W Scotland Dr, Irving, TX 75062" oninput="uf('property_address')" />
   </div>
   <div class="field-row search-field" id="row-opportunity_name">
-    <div class="field-name">Opportunity Name <span class="search-badge">🔍 tertiary search</span></div>
+    <div class="field-name">Opportunity Name <span class="search-badge">🔍 confirmation</span></div>
     <input class="fi" id="opportunity_name" placeholder="Seller name or deal name..." oninput="uf('opportunity_name')" />
+  </div>
+  <div class="field-row" id="row-seller_phone">
+    <div class="field-name">Seller Phone <span class="opt">optional</span></div>
+    <input class="fi" id="seller_phone" placeholder="e.g. 2145158483" oninput="this.value=normalizePhone(this.value);uf('seller_phone')" />
   </div>
 
   <!-- REQUIRED FIELDS -->
@@ -327,9 +327,9 @@ async function parseWithAI(source){
   const prompt = `Extract info from this real estate wholesaling sales note. Return ONLY a valid JSON object, no explanation, no markdown.
 
 Keys:
+- property_address: full property address in format "Street, City, ST, Zip" — always use 2-letter state abbreviation (GA not Georgia, TX not Texas, FL not Florida) — used as primary Salesforce lookup key
+- opportunity_name: seller name or deal name — used to confirm the Salesforce record match
 - seller_phone: seller phone number digits only no dashes or spaces (e.g. 2145158483), empty string if not mentioned
-- property_address: full property address in format "Street, City, ST, Zip" — always use 2-letter state abbreviation (GA not Georgia, TX not Texas, FL not Florida)
-- opportunity_name: seller name or deal name
 - am_notes: detailed summary of the conversation including seller situation, motivation, property condition
 - next_step: next action to take
 - next_contact_date: follow-up date (YYYY-MM-DD, today is ${today})
