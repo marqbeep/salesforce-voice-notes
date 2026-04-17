@@ -76,21 +76,25 @@
   <div class="header-sub">Marquis Figueroa · Salesforce Automation</div>
 </div>
 
-<div class="section"><div class="section-label">Anthropic API Key</div></div>
-<div class="api-key-box">
-  <div class="api-key-label">Required for AI parsing</div>
-  <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." oninput="saveKey()" />
-  <div class="api-key-note">Get your key at <strong>console.anthropic.com</strong> → API Keys.</div>
+<div id="settings-toggle" onclick="toggleSettings()" style="cursor:pointer;background:#13131a;border-bottom:1px solid #2a2a3a;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">
+  <span style="font-family:monospace;font-size:10px;letter-spacing:1.5px;color:#6b6b80;text-transform:uppercase;">⚙️ Settings</span>
+  <span id="settings-chevron" style="color:#6b6b80;font-size:12px;">▼ show</span>
 </div>
-
-<div class="section" style="margin-top:16px;"><div class="section-label">Zapier Webhook URL</div></div>
-<div style="padding:0 20px;">
-  <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." oninput="saveHook()" />
-</div>
-
-<div class="section" style="margin-top:12px;"><div class="section-label">Drive Prep Webhook URL</div></div>
-<div style="padding:0 20px;">
-  <input type="url" id="drivePrepUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/... (Drive prep Zap)" oninput="saveDriveHook()" />
+<div id="settings-panel" style="display:none;">
+  <div class="section" style="margin-top:16px;"><div class="section-label">Anthropic API Key</div></div>
+  <div class="api-key-box">
+    <div class="api-key-label">Required for AI parsing</div>
+    <input type="password" id="apiKey" class="input-field" placeholder="sk-ant-api03-..." oninput="saveKey()" />
+    <div class="api-key-note">Get your key at <strong>console.anthropic.com</strong> → API Keys.</div>
+  </div>
+  <div class="section" style="margin-top:16px;"><div class="section-label">Zapier Webhook URL</div></div>
+  <div style="padding:0 20px;">
+    <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." oninput="saveHook()" />
+  </div>
+  <div class="section" style="margin-top:12px;"><div class="section-label">Drive Prep Webhook URL</div></div>
+  <div style="padding:0 20px 16px;">
+    <input type="url" id="drivePrepUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/... (Drive prep Zap)" oninput="saveDriveHook()" />
+  </div>
 </div>
 
 <div class="section" style="margin-top:20px;"><div class="section-label">Voice Note</div></div>
@@ -109,7 +113,12 @@
   </div>
 </div>
 
-<div class="section" style="margin-top:20px;"><div class="section-label">Salesforce Fields</div></div>
+<div style="padding:12px 20px 0;">
+  <button onclick="createDrivePrep()" id="prepBtn" style="width:100%;padding:14px;background:#7b5ea7;color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">📁 Create Folder + Sheet</button>
+  <div id="prepResult" style="font-size:12px;color:#b89fd4;text-align:center;min-height:16px;padding:6px 0 2px;"></div>
+</div>
+
+<div class="section" style="margin-top:12px;"><div class="section-label">Salesforce Fields</div></div>
 <div class="search-hint">🔍 <strong>Lookup Fields</strong> — Address is the primary anchor, Opportunity Name is the confirmation. Zapier uses these to find the exact Salesforce record before updating.</div>
 
 <div class="fields-wrap">
@@ -127,13 +136,6 @@
     <div class="field-name">Seller Phone <span class="opt">optional</span></div>
     <input class="fi" id="seller_phone" placeholder="e.g. 2145158483" oninput="this.value=normalizePhone(this.value);uf('seller_phone')" />
   </div>
-
-  <!-- PRE-APPOINTMENT PREP -->
-  <div style="border-top:1px solid #2a2a3a;margin:4px 0 2px;"></div>
-  <div style="font-family:monospace;font-size:10px;letter-spacing:1.5px;color:#6b6b80;text-transform:uppercase;padding:2px 0 6px;">Pre-Appointment</div>
-  <button onclick="createDrivePrep()" id="prepBtn" style="width:100%;padding:14px;background:#7b5ea7;color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">📁 Create Folder + Sheet</button>
-  <div id="prepResult" style="font-size:12px;color:#b89fd4;text-align:center;min-height:16px;padding:2px 0;"></div>
-  <div style="border-top:1px solid #2a2a3a;margin:2px 0 4px;"></div>
 
   <!-- REQUIRED FIELDS -->
   <div class="field-row" id="row-follow_up_status">
@@ -247,6 +249,14 @@ function uf(k){
   row.classList.toggle('filled', ok);
   row.classList.toggle('missing', !ok && REQ.includes(k));
   checkSend();
+}
+
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel');
+  const chevron = document.getElementById('settings-chevron');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'block';
+  chevron.textContent = visible ? '▼ show' : '▲ hide';
 }
 
 function toggleLocked() {
