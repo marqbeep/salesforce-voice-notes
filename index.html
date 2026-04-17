@@ -88,6 +88,11 @@
   <input type="url" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." oninput="saveHook()" />
 </div>
 
+<div class="section" style="margin-top:12px;"><div class="section-label">Drive Prep Webhook URL</div></div>
+<div style="padding:0 20px;">
+  <input type="url" id="drivePrepUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/... (Drive prep Zap)" oninput="saveDriveHook()" />
+</div>
+
 <div class="section" style="margin-top:20px;"><div class="section-label">Voice Note</div></div>
 <div style="padding:0 20px;">
   <div class="record-area">
@@ -122,6 +127,13 @@
     <div class="field-name">Seller Phone <span class="opt">optional</span></div>
     <input class="fi" id="seller_phone" placeholder="e.g. 2145158483" oninput="this.value=normalizePhone(this.value);uf('seller_phone')" />
   </div>
+
+  <!-- PRE-APPOINTMENT PREP -->
+  <div style="border-top:1px solid #2a2a3a;margin:4px 0 2px;"></div>
+  <div style="font-family:monospace;font-size:10px;letter-spacing:1.5px;color:#6b6b80;text-transform:uppercase;padding:2px 0 6px;">Pre-Appointment</div>
+  <button onclick="createDrivePrep()" id="prepBtn" style="width:100%;padding:14px;background:#7b5ea7;color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">📁 Create Folder + Sheet</button>
+  <div id="prepResult" style="font-size:12px;color:#b89fd4;text-align:center;min-height:16px;padding:2px 0;"></div>
+  <div style="border-top:1px solid #2a2a3a;margin:2px 0 4px;"></div>
 
   <!-- REQUIRED FIELDS -->
   <div class="field-row" id="row-follow_up_status">
@@ -469,6 +481,42 @@ function clearAll(){
   checkSend();
 }
 
+async function createDrivePrep() {
+  const url = localStorage.getItem('sf_drive_prep_url') || '';
+  if (!url) { alert('Enter your Drive Prep Webhook URL in settings first.'); return; }
+  const address = document.getElementById('property_address').value.trim();
+  const name    = document.getElementById('opportunity_name').value.trim();
+  const apptRaw = document.getElementById('next_contact_date').value;
+  if (!address) { alert('Enter Property Address first.'); return; }
+  if (!apptRaw) { alert('Enter Next Contact Date (appointment date) first.'); return; }
+  const apptDate = new Date(apptRaw + 'T12:00:00');
+  const monthLabel = apptDate.toLocaleString('en-US', { month: 'long' }) + ' ' + apptDate.getFullYear();
+  const btn = document.getElementById('prepBtn');
+  const res = document.getElementById('prepResult');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  res.textContent = '';
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        property_address: address,
+        opportunity_name: name,
+        appointment_date: apptRaw,
+        month_label: monthLabel,
+        year: String(apptDate.getFullYear())
+      }),
+      mode: 'no-cors'
+    });
+    res.textContent = '✅ Sent — Zapier is creating your Drive folder + sheet.';
+  } catch(e) {
+    res.textContent = '❌ Failed. Check your Drive Prep Webhook URL.';
+  }
+  btn.textContent = '📁 Create Folder + Sheet';
+  btn.disabled = false;
+}
+
 function saveKey() {
   const v = document.getElementById('apiKey').value.trim();
   if (v) {
@@ -479,11 +527,11 @@ function saveKey() {
 }
 function saveHook() {
   const v = document.getElementById('webhookUrl').value.trim();
-  if (v) {
-    localStorage.setItem('sf_webhook_url', v);
-  } else {
-    localStorage.removeItem('sf_webhook_url');
-  }
+  if (v) { localStorage.setItem('sf_webhook_url', v); } else { localStorage.removeItem('sf_webhook_url'); }
+}
+function saveDriveHook() {
+  const v = document.getElementById('drivePrepUrl').value.trim();
+  if (v) { localStorage.setItem('sf_drive_prep_url', v); } else { localStorage.removeItem('sf_drive_prep_url'); }
 }
 
 function todayDate() {
@@ -509,8 +557,10 @@ function setDateDefaults() {
 (function loadCreds() {
   const key = localStorage.getItem('sf_api_key');
   const hook = localStorage.getItem('sf_webhook_url');
+  const driveHook = localStorage.getItem('sf_drive_prep_url');
   if (key) document.getElementById('apiKey').value = key;
   if (hook) document.getElementById('webhookUrl').value = hook;
+  if (driveHook) document.getElementById('drivePrepUrl').value = driveHook;
 })();
 setDateDefaults();
 checkSend();
