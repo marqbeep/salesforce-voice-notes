@@ -59,6 +59,7 @@
   .result-banner { border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 500; text-align: center; display: none; margin-bottom: 12px; }
   .result-banner.success { background: rgba(0,229,160,0.1); border: 1px solid #00e5a0; color: #00e5a0; display: block; }
   .result-banner.error { background: rgba(255,77,109,0.1); border: 1px solid #ff4d6d; color: #ff4d6d; display: block; }
+  .save-settings-btn { background: #00e5a0; color: #0a0a0f; border: none; border-radius: 10px; padding: 10px 20px; font-weight: 800; font-size: 13px; cursor: pointer; font-family: monospace; }
   .send-btn { width: 100%; padding: 18px; background: #00e5a0; color: #0a0a0f; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; }
   .send-btn:disabled { background: #2a2a3a; color: #6b6b80; cursor: not-allowed; }
   .search-hint { background: rgba(123,94,167,0.1); border: 1px solid #7b5ea7; border-radius: 10px; padding: 12px 14px; margin: 0 20px 12px; font-size: 12px; color: #b89fd4; line-height: 1.6; }
@@ -89,11 +90,15 @@
   </div>
   <div class="section" style="margin-top:16px;"><div class="section-label">Zapier Webhook URL</div></div>
   <div style="padding:0 20px;">
-    <input type="text" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." oninput="saveHook()" onchange="saveHook()" onpaste="setTimeout(saveHook,0)" />
+    <input type="text" id="webhookUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/..." />
   </div>
   <div class="section" style="margin-top:12px;"><div class="section-label">Drive Prep Webhook URL</div></div>
   <div style="padding:0 20px 16px;">
-    <input type="text" id="drivePrepUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/... (Drive prep Zap)" oninput="saveDriveHook()" onchange="saveDriveHook()" onpaste="setTimeout(saveDriveHook,0)" />
+    <input type="text" id="drivePrepUrl" class="input-field" placeholder="https://hooks.zapier.com/hooks/catch/... (Drive prep Zap)" />
+  </div>
+  <div style="padding:12px 20px 16px; display:flex; align-items:center; gap:12px;">
+    <button class="save-settings-btn" onclick="saveSettings()">Save Settings</button>
+    <span id="saveConfirm" style="display:none; color:#00e5a0; font-size:12px; font-family:monospace;">✓ Settings saved!</span>
   </div>
 </div>
 
@@ -535,13 +540,14 @@ function saveKey() {
     localStorage.removeItem('sf_api_key');
   }
 }
-function saveHook() {
-  const v = document.getElementById('webhookUrl').value.trim();
-  if (v) { localStorage.setItem('sf_webhook_url', v); } else { localStorage.removeItem('sf_webhook_url'); }
-}
-function saveDriveHook() {
-  const v = document.getElementById('drivePrepUrl').value.trim();
-  if (v) { localStorage.setItem('sf_drive_prep_url', v); } else { localStorage.removeItem('sf_drive_prep_url'); }
+function saveSettings() {
+  const hook = document.getElementById('webhookUrl').value.trim();
+  const driveHook = document.getElementById('drivePrepUrl').value.trim();
+  if (hook) { localStorage.setItem('sf_webhook_url', hook); } else { localStorage.removeItem('sf_webhook_url'); }
+  if (driveHook) { localStorage.setItem('sf_drive_prep_url', driveHook); } else { localStorage.removeItem('sf_drive_prep_url'); }
+  const el = document.getElementById('saveConfirm');
+  el.style.display = 'inline';
+  setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
 function todayDate() {
