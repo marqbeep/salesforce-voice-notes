@@ -1,4 +1,4 @@
-const CACHE = 'sfvoice-v1';
+const CACHE = 'sfvoice-v2';
 const SHELL = [
   '/salesforce-voice-notes/',
   '/salesforce-voice-notes/index.html',
