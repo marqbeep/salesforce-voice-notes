@@ -248,7 +248,11 @@ function normalizePhone(v) {
 }
 
 function sanitizeForSOQL(str) {
-  return (str || '').replace(/'/g, "\\'");
+  if (!str) return str;
+  return str
+    .replace(/'/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function uf(k){
