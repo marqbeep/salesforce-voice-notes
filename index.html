@@ -349,6 +349,8 @@ async function parseWithAI(source){
   pb.textContent = '⏳ Parsing...';
   pb.disabled = true;
   setS('AI is reading your notes...','#ff9f1c');
+  const rb0 = document.getElementById('resultBanner');
+  rb0.textContent = ''; rb0.className = 'result-banner';
 
   const today = new Date().toISOString().split('T')[0];
   const prompt = `Extract info from this real estate wholesaling sales note. Return ONLY a valid JSON object, no explanation, no markdown.
@@ -412,7 +414,18 @@ Note: "${text}"`;
     setS('✅ Fields filled from your note!','#00e5a0');
     pb.textContent = '✨ Re-parse';
   } catch(err){
-    setS('❌ Parse failed: '+err.message,'#ff4d6d');
+    const msg = err.message || '';
+    const isCreditErr = /credit|quota|billing|insufficient|balance/i.test(msg);
+    const rb = document.getElementById('resultBanner');
+    if (isCreditErr) {
+      rb.textContent = '⚠️ API credits exhausted. Add credits at console.anthropic.com → Billing, then try again. If you just added credits, re-enter your API key in Settings.';
+      rb.className = 'result-banner error';
+      setS('❌ Out of API credits','#ff4d6d');
+    } else {
+      rb.textContent = '❌ AI parse failed: ' + msg;
+      rb.className = 'result-banner error';
+      setS('❌ Parse failed','#ff4d6d');
+    }
     pb.textContent = source==='manual' ? '✨ Parse typed note with AI' : '🔄 Re-parse';
   }
   pb.disabled = false;
