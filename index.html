@@ -244,7 +244,11 @@ const LBL={seller_phone:'Seller Phone',property_address:'Property Address',oppor
 let isRec=false, recog=null, tfinal='';
 
 function normalizePhone(v) {
-  return v.replace(/\D/g, ''); // strip everything except digits
+  return v.replace(/\D/g, '');
+}
+
+function sanitizeForSOQL(str) {
+  return (str || '').replace(/'/g, "\\'");
 }
 
 function uf(k){
@@ -441,10 +445,10 @@ async function sendToZapier(){
 
   const p = {
     seller_phone: document.getElementById('seller_phone').value.trim(),
-    property_address: document.getElementById('property_address').value.trim(),
-    opportunity_name: document.getElementById('opportunity_name').value.trim(),
-    am_notes: document.getElementById('am_notes').value.trim(),
-    next_step: document.getElementById('next_step').value.trim(),
+    property_address: sanitizeForSOQL(document.getElementById('property_address').value.trim()),
+    opportunity_name: sanitizeForSOQL(document.getElementById('opportunity_name').value.trim()),
+    am_notes: sanitizeForSOQL(document.getElementById('am_notes').value.trim()),
+    next_step: sanitizeForSOQL(document.getElementById('next_step').value.trim()),
     next_contact_date: document.getElementById('next_contact_date').value,
     stage: 'Follow Up',
     follow_up_status: document.getElementById('follow_up_status').value,
