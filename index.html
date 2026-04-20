@@ -250,7 +250,6 @@ function normalizePhone(v) {
 function sanitizeForSOQL(str) {
   if (!str) return str;
   return str
-    .replace(/'/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -364,8 +363,8 @@ async function parseWithAI(source){
   const prompt = `Extract info from this real estate wholesaling sales note. Return ONLY a valid JSON object, no explanation, no markdown.
 
 Keys:
-- property_address: full property address in format "Street, City, ST, Zip" — always use 2-letter state abbreviation (GA not Georgia, TX not Texas, FL not Florida) — used as primary Salesforce lookup key
-- opportunity_name: seller name or deal name — used to confirm the Salesforce record match
+- property_address: full property address in format "Street, City, ST Zip" — always use 2-letter state abbreviation (GA not Georgia, TX not Texas, FL not Florida) — do NOT include country ("United States") — used as primary Salesforce lookup key
+- opportunity_name: seller name only (first and last name, no trailing punctuation or dashes) — used to confirm the Salesforce record match
 - seller_phone: seller phone number digits only no dashes or spaces (e.g. 2145158483), empty string if not mentioned
 - am_notes: detailed summary of the conversation including seller situation, motivation, property condition
 - next_step: next action to take
