@@ -63,6 +63,7 @@
   .send-btn { width: 100%; padding: 18px; background: #00e5a0; color: #0a0a0f; border: none; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer; }
   .send-btn:disabled { background: #2a2a3a; color: #6b6b80; cursor: not-allowed; }
   .search-hint { background: rgba(123,94,167,0.1); border: 1px solid #7b5ea7; border-radius: 10px; padding: 12px 14px; margin: 0 20px 12px; font-size: 12px; color: #b89fd4; line-height: 1.6; }
+  .sf-context-banner { background: rgba(0,229,160,0.08); border-bottom: 1px solid #00e5a0; padding: 10px 20px; font-size: 12px; color: #00e5a0; font-family: monospace; display: none; }
   input[type="date"]::-webkit-calendar-picker-indicator,
   input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); }
 </style>
@@ -77,6 +78,7 @@
   <div class="header-sub">Marquis Figueroa · Salesforce Automation</div>
 </div>
 
+<div class="sf-context-banner" id="sf-context-banner"></div>
 <div id="settings-toggle" onclick="toggleSettings()" style="cursor:pointer;background:#13131a;border-bottom:1px solid #2a2a3a;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">
   <span style="font-family:monospace;font-size:10px;letter-spacing:1.5px;color:#6b6b80;text-transform:uppercase;">⚙️ Settings</span>
   <span id="settings-chevron" style="color:#6b6b80;font-size:12px;">▼ show</span>
@@ -240,6 +242,9 @@
 <script>
 const REQ=['opportunity_name','property_address','am_notes','next_step','next_contact_date','last_conversation_date','last_offer','offer_made_time','reason_not_locked','follow_up_status','appointment_set_quality','appointment_attendance','in_person_appointment_completed'];
 const LBL={seller_phone:'Seller Phone',property_address:'Property Address',opportunity_name:'Opportunity Name',am_notes:'AM Notes',next_step:'Next Step',next_contact_date:'Next Contact Date',last_conversation_date:'Last Conversation Date',last_offer:'Last Offer',offer_made_time:'Offer Made Time',reason_not_locked:'Reason Not Locked',follow_up_status:'Follow Up Status',appointment_set_quality:'Appt Quality',appointment_attendance:'Appt Attendance',in_person_appointment_completed:'In Person Completed'};
+
+const _urlParams = new URLSearchParams(window.location.search);
+const sfLeadId = _urlParams.get('leadId') || '';
 
 let isRec=false, recog=null, tfinal='';
 
@@ -447,6 +452,7 @@ async function sendToZapier(){
   btn.disabled = true;
 
   const p = {
+    lead_id: sfLeadId,
     seller_phone: document.getElementById('seller_phone').value.trim(),
     property_address: sanitizeForSOQL(document.getElementById('property_address').value.trim()),
     opportunity_name: sanitizeForSOQL(document.getElementById('opportunity_name').value.trim()),
@@ -588,7 +594,7 @@ function setDateDefaults() {
   if (omt && !omt.value) { omt.value = nowDatetime(); uf('offer_made_time'); }
 }
 
-// Init: load persisted credentials
+// Init: load persisted credentials and Salesforce URL params
 (function loadCreds() {
   const key = localStorage.getItem('sf_api_key');
   const hook = localStorage.getItem('sf_webhook_url');
@@ -596,6 +602,27 @@ function setDateDefaults() {
   if (key) document.getElementById('apiKey').value = key;
   if (hook) document.getElementById('webhookUrl').value = hook;
   if (driveHook) document.getElementById('drivePrepUrl').value = driveHook;
+
+  if (sfLeadId) {
+    const addr = _urlParams.get('address');
+    const name = _urlParams.get('name');
+    const phone = _urlParams.get('phone');
+    if (addr) { document.getElementById('property_address').value = addr; uf('property_address'); }
+    if (name) { document.getElementById('opportunity_name').value = name; uf('opportunity_name'); }
+    if (phone) { document.getElementById('seller_phone').value = normalizePhone(phone); uf('seller_phone'); }
+
+    const banner = document.getElementById('sf-context-banner');
+    banner.style.display = 'block';
+    banner.textContent = '⚡ Salesforce Lead loaded — ID locked in. No search needed.';
+
+    const hint = document.querySelector('.search-hint');
+    if (hint) {
+      hint.style.background = 'rgba(0,229,160,0.05)';
+      hint.style.borderColor = '#00e5a0';
+      hint.style.color = '#00e5a0';
+      hint.innerHTML = '⚡ <strong>Salesforce Mode</strong> — Lead ID is locked in from the URL. Fields below are pre-filled for reference; AI can still update them from your note.';
+    }
+  }
 })();
 setDateDefaults();
 checkSend();
